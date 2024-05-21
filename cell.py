@@ -64,7 +64,7 @@ class Cell:
                     init,
                     method=methods,
                     args=[pbar, [0.0, (length - 0.0) / 1000]],
-                    first_step=0.1
+                    first_step=0.01
                 )
         else:
             timeseries = solve_ivp(

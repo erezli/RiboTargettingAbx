@@ -27,7 +27,7 @@ class Cell:
 
     def ribosome_mechanism(self, t, x, pbar, state):
         # progress bar feature edited from https://gist.github.com/thomaslima/d8e795c908f334931354da95acb97e54
-        # x = [a, r_u, r_b, p]
+        # x = [a, r_u, r_b, p, v]
         # cannot use matrix form because non-linearity
 
         reversible_binding = - self.k_on * x[0] * (x[1] - self.ribo_min) + self.k_off * x[2]
@@ -43,6 +43,7 @@ class Cell:
         r_u_dot = dilution_by_growth * x[1] + reversible_binding + ribosome_syn
         r_b_dot = dilution_by_growth * x[2] + reversible_binding
         p_dot = dilution_by_growth * x[3] + cell_wall_syn
+        v_dot = - dilution_by_growth * x[4]
 
         if pbar:
             last_t, dt = state
@@ -51,7 +52,7 @@ class Cell:
 
             # we need this to take into account that n is a rounded number.
             state[0] = last_t + dt * n
-        return np.array([a_dot, r_u_dot, r_b_dot, p_dot])
+        return np.array([a_dot, r_u_dot, r_b_dot, p_dot, v_dot])
 
     def cell_growth(self, init, length, methods='RK45', show_progress=True):
         t = (0.0, float(length))

@@ -41,7 +41,7 @@ class Cell:
         cell_wall_syn = self.beta * (x[1] - self.ribo_min) - self.gama * x[3]
         a_dot = dilution_by_growth * x[0] + reversible_binding + abx_influx
         r_u_dot = dilution_by_growth * x[1] + reversible_binding + ribosome_syn
-        r_b_dot = dilution_by_growth * x[2] + reversible_binding
+        r_b_dot = dilution_by_growth * x[2] - reversible_binding
         p_dot = dilution_by_growth * x[3] + cell_wall_syn
         v_dot = - dilution_by_growth * x[4]
 

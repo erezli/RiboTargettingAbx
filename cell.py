@@ -54,7 +54,7 @@ class Cell:
             state[0] = last_t + dt * n
         return np.array([a_dot, r_u_dot, r_b_dot, p_dot, v_dot])
 
-    def cell_growth(self, init, length, methods='RK45', show_progress=True):
+    def cell_growth(self, init, length, methods='RK45', t_eval=None, show_progress=True):
         t = (0.0, float(length))
         if show_progress:
             with tqdm(total=1000, unit="‰") as pbar:
@@ -63,6 +63,7 @@ class Cell:
                     t,
                     init,
                     method=methods,
+                    t_eval=t_eval,
                     args=[pbar, [0.0, (length - 0.0) / 1000]],
                     first_step=0.01
                 )
@@ -72,6 +73,7 @@ class Cell:
                 t,
                 init,
                 method=methods,
+                t_eval=t_eval,
                 args=[None, [0.0, (length - 0.0) / 1000]],
             )
         # if plot and isinstance(plot, int):

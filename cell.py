@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 import time
 from scipy.optimize import fsolve
+import copy
 
 
 class Cell:
@@ -24,6 +25,8 @@ class Cell:
         self.R_u = np.array([])
         self.R_b = np.array([])
         self.p = np.array([])
+        self.timeseries = None
+        self.cell_size = None
 
     def ribosome_mechanism(self, t, x, pbar, state):
         # progress bar feature edited from https://gist.github.com/thomaslima/d8e795c908f334931354da95acb97e54
@@ -80,4 +83,20 @@ class Cell:
         #     plt.plot(time_series.t, time_series.y[plot+1])
         #     plt.xlabel("time")
         #     plt.ylabel("{}".format(label))
+        self.timeseries = timeseries
         return timeseries
+
+    def set_adder_trace(self, adder_constant=1):
+        cell_size = copy.deepcopy(self.timeseries.y[4])
+
+        birth_size = cell_size[0]
+        for i in range(len(cell_size)):
+            if self.t_end >= self.timeseries.t[i] >= self.t_start:
+                birth_size = cell_size[i]
+                continue
+
+            if cell_size[i] - birth_size >= adder_constant:
+                cell_size[i:] = cell_size[i:] / 2
+                birth_size = cell_size[i]
+        self.cell_size = cell_size
+        return cell_size

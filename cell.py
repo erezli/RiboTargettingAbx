@@ -32,6 +32,8 @@ class Cell:
 
         self.adder_constant = None
 
+        self.report_size = False
+
     def ribosome_mechanism(self, t, x, pbar, state):
         # progress bar feature edited from https://gist.github.com/thomaslima/d8e795c908f334931354da95acb97e54
         # x = [a, r_u, r_b, p, v]
@@ -45,9 +47,12 @@ class Cell:
         dilution_by_growth = - self.gama * x[3]
         if (self.t_end == -1 and t > self.t_start) or (self.t_end != -1 and self.t_start < t < self.t_end):
             external_abx = self.abx_env
+            if self.report_size:
+                print(x[4])
+                self.report_size = False
         else:
             external_abx = 0
-        abx_influx = self.p_in * external_abx - self.p_out * x[0]
+        abx_influx = (self.p_in * external_abx - self.p_out * x[0]) * cell_surface
         ribosome_syn = self.alpha * (x[1] - self.ribo_min)
         cell_wall_syn = self.beta * (x[1] - self.ribo_min) - self.gama * x[3]
         a_dot = dilution_by_growth * x[0] + reversible_binding + abx_influx
@@ -66,7 +71,7 @@ class Cell:
         return np.array([a_dot, r_u_dot, r_b_dot, p_dot, v_dot])
 
     def division_mechanism(self, t, x):
-        if self.t_end >= t >= self.t_start:
+        if (self.t_end == -1 and t > self.t_start) or (self.t_end != -1 and self.t_start < t < self.t_end):
             self.birth_size = x[4]
         if x[4] - self.birth_size >= self.adder_constant:
             # print(f"divide at {t}")
@@ -79,6 +84,8 @@ class Cell:
         self.birth_size = init[4]
         self.adder_constant = init[4]
         self.cell_diameter = 0.86 * init[4] ** (1. / 3.)
+        self.report_size = True
+
         if show_progress:
             with tqdm(total=1000, unit="‰") as pbar:
                 timeseries = solve_ivp(

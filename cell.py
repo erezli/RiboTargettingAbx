@@ -27,11 +27,19 @@ class Cell:
         self.p = np.array([])
         self.timeseries = None
         self.cell_size = None
+        self.birth_size = None
+        self.cell_diameter = None
+
+        self.adder_constant = None
 
     def ribosome_mechanism(self, t, x, pbar, state):
         # progress bar feature edited from https://gist.github.com/thomaslima/d8e795c908f334931354da95acb97e54
         # x = [a, r_u, r_b, p, v]
         # cannot use matrix form because non-linearity
+
+        x = self.division_mechanism(t, x)
+        cell_length = x[4] / (np.pi / 4 * self.cell_diameter ** 2)
+        cell_surface = np.pi * cell_length * self.cell_diameter + np.pi * self.cell_diameter ** 2 / 2
 
         reversible_binding = - self.k_on * x[0] * (x[1] - self.ribo_min) + self.k_off * x[2]
         dilution_by_growth = - self.gama * x[3]
@@ -57,8 +65,20 @@ class Cell:
             state[0] = last_t + dt * n
         return np.array([a_dot, r_u_dot, r_b_dot, p_dot, v_dot])
 
+    def division_mechanism(self, t, x):
+        if self.t_end >= t >= self.t_start:
+            self.birth_size = x[4]
+        if x[4] - self.birth_size >= self.adder_constant:
+            # print(f"divide at {t}")
+            x[4] = x[4] / 2
+            self.birth_size = x[4]
+        return x
+
     def cell_growth(self, init, length, methods='RK45', t_eval=None, show_progress=True):
         t = (0.0, float(length))
+        self.birth_size = init[4]
+        self.adder_constant = init[4]
+        self.cell_diameter = 0.86 * init[4] ** (1. / 3.)
         if show_progress:
             with tqdm(total=1000, unit="‰") as pbar:
                 timeseries = solve_ivp(
@@ -68,7 +88,7 @@ class Cell:
                     method=methods,
                     t_eval=t_eval,
                     args=[pbar, [0.0, (length - 0.0) / 1000]],
-                    first_step=0.01
+                    max_step=0.01
                 )
         else:
             timeseries = solve_ivp(
@@ -78,6 +98,7 @@ class Cell:
                 method=methods,
                 t_eval=t_eval,
                 args=[None, [0.0, (length - 0.0) / 1000]],
+                max_step=0.01
             )
         # if plot and isinstance(plot, int):
         #     plt.plot(time_series.t, time_series.y[plot+1])

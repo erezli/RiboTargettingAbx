@@ -32,7 +32,8 @@ class Cell:
 
         self.adder_constant = None
 
-        self.report_size = False
+        self.report_size_end = False
+        self.report_size_start = False
 
     def ribosome_mechanism(self, t, x, pbar, state):
         # progress bar feature edited from https://gist.github.com/thomaslima/d8e795c908f334931354da95acb97e54
@@ -47,10 +48,13 @@ class Cell:
         dilution_by_growth = - self.gama * x[3]
         if (self.t_end == -1 and t > self.t_start) or (self.t_end != -1 and self.t_start < t < self.t_end):
             external_abx = self.abx_env
-            if self.report_size:
+            if self.report_size_start:
                 print(f"Cell size at treatment start: {x[4]}")
-                self.report_size = False
+                self.report_size_start = False
         else:
+            if self.t_end != -1 and t > self.t_end and self.report_size_end:
+                print(f"Cell size at treatment end: {x[4]}")
+                self.report_size_end = False
             external_abx = 0
         abx_influx = (self.p_in * external_abx - self.p_out * x[0]) * cell_surface
         ribosome_syn = self.alpha * (x[1] - self.ribo_min)
@@ -84,7 +88,8 @@ class Cell:
         self.birth_size = init[4]
         self.adder_constant = init[4]
         self.cell_diameter = 0.86 * init[4] ** (1. / 3.)
-        self.report_size = True
+        self.report_size_start = True
+        self.report_size_end = True
 
         if show_progress:
             with tqdm(total=1000, unit="‰") as pbar:

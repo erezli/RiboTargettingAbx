@@ -48,7 +48,7 @@ class Cell:
         if (self.t_end == -1 and t > self.t_start) or (self.t_end != -1 and self.t_start < t < self.t_end):
             external_abx = self.abx_env
             if self.report_size:
-                print(x[4])
+                print(f"Cell size at treatment start: {x[4]}")
                 self.report_size = False
         else:
             external_abx = 0

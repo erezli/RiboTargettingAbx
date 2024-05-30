@@ -29,11 +29,14 @@ class Cell:
         self.cell_size = None
         self.birth_size = None
         self.cell_diameter = None
+        # self.previous_size = None
+        # self.growth_rate = []
 
         self.adder_constant = None
 
         self.report_size_end = False
         self.report_size_start = False
+        # self.report_growth_halt = False
 
     def ribosome_mechanism(self, t, x, pbar, state):
         # progress bar feature edited from https://gist.github.com/thomaslima/d8e795c908f334931354da95acb97e54
@@ -43,6 +46,9 @@ class Cell:
         x = self.division_mechanism(t, x)
         cell_length = x[4] / (np.pi / 4 * self.cell_diameter ** 2)
         cell_surface = np.pi * cell_length * self.cell_diameter + np.pi * self.cell_diameter ** 2 / 2
+        # if self.previous_size:
+        #     growth_rate = (np.log(x[4]) - np.log(self.previous_size)[1]) / (t - self.previous_size[0])
+        #     self.growth_rate.append(growth_rate)
 
         reversible_binding = - self.k_on * x[0] * (x[1] - self.ribo_min) + self.k_off * x[2]
         dilution_by_growth = - self.gama * x[3]
@@ -51,6 +57,11 @@ class Cell:
             if self.report_size_start:
                 print(f"Cell size at treatment start: {x[4]}")
                 self.report_size_start = False
+            # if growth_rate <= 0.0001 and self.report_growth_halt:
+            #     print(t)
+            #     print(self.previous_size)
+            #     print(growth_rate)
+            #     self.report_growth_halt = False
         else:
             if self.t_end != -1 and t > self.t_end and self.report_size_end:
                 print(f"Cell size at treatment end: {x[4]}")
@@ -64,6 +75,8 @@ class Cell:
         r_b_dot = dilution_by_growth * x[2] - reversible_binding
         p_dot = dilution_by_growth * x[3] + cell_wall_syn
         v_dot = - dilution_by_growth * x[4]
+
+        # self.previous_size = copy.deepcopy((t, x[4]))
 
         if pbar:
             last_t, dt = state
@@ -90,6 +103,7 @@ class Cell:
         self.cell_diameter = 0.86 * init[4] ** (1. / 3.)
         self.report_size_start = True
         self.report_size_end = True
+        # self.report_growth_halt = True
 
         if show_progress:
             with tqdm(total=1000, unit="‰") as pbar:
